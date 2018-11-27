@@ -1,18 +1,57 @@
 <template lang="pug">
-    span.vue-ip(:class="{'show-port' : portCopy !== false, 'material-theme': theme === 'material', 'active': active, 'valid': valid}")
+    span(v-if="theme === 'material'").material.vue-ip(:class="{'show-port' : portCopy !== false, 'active': active, 'valid': valid}")
         .label
             slot
         .segment(v-for="(segment, index) in ipCopy")
-            input(type="number", v-model="ipCopy[index]", :placeholder="placeholderPos(index)", maxlength="3", @paste="paste($event)", @keydown="ipKeydown($event, index)", @focus="ipFocus(index)", @blur="blur", ref="ipSegment")
-        input(type="number", v-show="portCopy !== false", v-model="portCopy", :placeholder="((placeholder) ? '8080' : '')", @paste="paste($event)", @focus="portFocus", @keydown="portKeydown", @blur="blur", ref="portSegment").port
+            input(type="number", maxlength="3", step="1"
+                v-model="ipCopy[index]",
+                :placeholder="placeholderPos(index)",
+                @paste="paste($event)",
+                @keydown="ipKeydown($event, index)",
+                @focus="ipFocus(index)",
+                @blur="blur",
+                ref="ipSegment")
+        input(type="number", 
+            v-show="portCopy !== false",
+            v-model="portCopy",
+            :placeholder="((placeholder) ? '8080' : '')",
+            @paste="paste($event)",
+            @focus="portFocus",
+            @keydown="portKeydown",
+            @blur="blur", 
+            ref="portSegment").port
+
+    form(v-else).form-inline.vue-ip
+        label.sr-only
+            slot
+        .form-group
+            span.segment.input-group-addon(v-for="(segment, index) in ipCopy")
+                input(type="number", maxlength="3",
+                    v-model="ipCopy[index]",
+                    :placeholder="placeholderPos(index)",
+                    @paste="paste($event)",
+                    @keydown="ipKeydown($event, index)",
+                    @focus="ipFocus(index)",
+                    @blur="blur",
+                    ref="ipSegment"
+                ).form-control
+            input(type="number", 
+                v-if="portCopy !== false",
+                v-model="portCopy",
+                :placeholder="((placeholder) ? '8080' : '')",
+                @paste="paste($event)",
+                @focus="portFocus",
+                @keydown="portKeydown",
+                @blur="blur", 
+                ref="portSegment").form-control
 </template>
 
 <style lang="stylus" scoped>
-    $ip-material-valid := #409EFF
+    $ip-material-valid := #8AC63F
     $ip-material-in-valid := #f25d59
 
-    $ip-material-color := #e0e0e0
-    $ip-material-color-mute := rgba(250,250,250,0.6);
+    $ip-material-color := #222222
+    $ip-material-color-mute := rgba(28,128,195,0.6);
     $ip-material-fontSize := inherit
 
     $ip-transition-speed := .15s
@@ -22,7 +61,7 @@
         display inline-block
         text-align left
 
-        &.material-theme
+        &.material
             transition all $ip-transition-speed ease-in-out
             border-bottom 1px solid $ip-material-color-mute
             padding 6px
@@ -30,6 +69,7 @@
             .label
                 display block
                 transition all $ip-transition-speed ease-in-out
+                text-align left
                 position absolute
                 width 100%
                 font-size .6rem
@@ -37,12 +77,16 @@
                 color $ip-material-color-mute
 
             .segment
+                &:not(:last-of-type)
+                    &:after
+                        content '.'
+                        display inline-block
                 &:after
                     color $ip-material-color
 
             &.active
                 &.valid
-                    &.material-theme
+                    &.material
                         border-bottom-color $ip-material-valid
 
                         .segment
@@ -53,7 +97,7 @@
                             color $ip-material-valid
 
                 &:not(.valid)
-                    &.material-theme
+                    &.material
                         border-bottom-color $ip-material-in-valid
 
                         .segment
@@ -67,6 +111,7 @@
                 background transparent
                 font-size $ip-material-fontSize
                 color $ip-material-color
+                width 40px
 
                 // Hide spinner on MOZ
                 -moz-appearance: textfield
@@ -76,7 +121,9 @@
                 // Hide spinner on chrome
 
                 &::placeholder
-                    color rgba($ip-material-color, .3)
+                    color rgba($ip-material-color, .6)
+
+        
 
         .label
             display none
@@ -90,16 +137,21 @@
         .segment
             display inline-block
 
-            &:not(:last-of-type)
-                &:after
-                    content '.'
-                    display inline-block
+            &.input-group-addon
+                padding 0
+                width unset
 
         input
             text-align center
-            width 40px
+            width 50px
             outline none
             border none
+            // Hide spinner on MOZ
+            -moz-appearance: textfield
+
+            &::-webkit-outer-spin-button, &::-webkit-inner-spin-button
+                -webkit-appearance none
+            // Hide spinner on chrome
 
             &.port
                 width 60px
@@ -125,6 +177,10 @@
             theme: {
                 type: [String, Boolean],
                 default: false
+            },
+            target: {
+                type: [String, Boolean],
+                default: false
             }
         },
         data() {
@@ -132,11 +188,11 @@
                 ipCopy: ['', '', '', ''],
                 portCopy: null,
                 valid: false,
-                active: false
+                active: false,
+                timeout: null
             }
         },
         beforeMount() {
-
             // Copy the values over
             this.copyValue(this.ip, this.port);
 
@@ -248,7 +304,7 @@
                 // If we have ports turned off, remove the port and only update the IP value
                 if (this.port === false) {
 
-                    console.warn('A IP address with a port has been entered but this module has no port attribute. Please enable it update the port.');
+                    //console.warn('A IP address with a port has been entered but this module has no port attribute. Please enable it update the port.');
 
                     this.clearAll();
 
@@ -309,9 +365,11 @@
              */
             ipKeydown(event, index) {
 
+                clearTimeout(this.timeout);
+
                 let keyCode = event.keyCode || event.which;
 
-                // Return or left on keypad
+                // Backspace or left on keypad
                 if (keyCode === 8 || keyCode === 37) {
 
                     // If there is nothing within the selected input go the the one before it
@@ -320,22 +378,34 @@
 
                 }
 
+                // else if (keyCode === 110 || keyCode === 190) {
+                //     console.log('dot');
+                //     // Allow tabing to next segment using Tab, Period or Enter if current segment has entry
+                //     if (this.ipCopy[index].length >= 1) {
+                //         this.moveToNextIpSegment(index, false);
+                //         this.ipCopy[index + 1] = this.ipCopy[index + 1].substring(0, this.ipCopy[index + 1].length - 1);
+                //     }
+                // }
+
                 // Semi-colon (jump to port number)
                 else if (keyCode === 186)
                     this.$refs.portSegment.focus();
 
-                setTimeout(() => {
 
+                this.timeout = setTimeout(() => {
+                    //console.log('Timeout');
                     // If its a 0 then always move to the next segment, if not work out if we need to move first
-                    if (this.ipCopy[index] === '0')
+                    if (this.ipCopy[index] === '0') {
                         this.moveToNextIpSegment(index, false);
-                    else
+                    } else {
                         this.moveToNextIpSegment(index);
+                    }
+                        
 
                     // Update the change
                     this.changed();
 
-                });
+                }, 200);
             },
 
             /**
@@ -369,7 +439,8 @@
              */
             changed(ip = this.ipCopy, port = this.portCopy) {
                 let ipLocal = this.arrayToIp(ip);
-                this.onChange(ipLocal, port, this.validateIP(ip));
+                this.ip = ipLocal;
+                this.onChange(ipLocal, port, this.validateIP(ip), this.target);
             },
 
             /**
@@ -405,7 +476,7 @@
 
                 // If something is not valid clear it all
                 if (segments.length !== 4) {
-                    console.error('Not valid, so clearing ip', segments);
+                    //console.error('Not valid, so clearing ip', segments);
                     this.clearAll();
                 } else
                     this.ipCopy = segments;
