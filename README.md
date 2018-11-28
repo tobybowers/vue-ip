@@ -30,8 +30,8 @@ new Vue({
         /**
         * Will be called on changes to IP address or port 
         */
-        change(ip, port, valid) {
-            console.log(ip, port, valid);
+        change(ip, port, valid, target) {
+            console.log(ip, port, valid, target);
         }
         
     },
@@ -55,7 +55,7 @@ new Vue({
 | port        	| string   	| null or '8080'                      	              |
 | placeholder 	| boolean   | will show a dummy ip address within the placeholder |
 | theme       	| string   	| 'material' (material design themed) 	              |
-
+|              	|         	| (default to Bootstrap) 	              |
 
 ### License
 [MIT](http://opensource.org/licenses/MIT)

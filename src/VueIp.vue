@@ -3,7 +3,7 @@
         .label
             slot
         .segment(v-for="(segment, index) in ipCopy")
-            input(type="number", maxlength="3", step="1"
+            input(type="number", maxlength="3", step="1", min="0", max="255",
                 v-model="ipCopy[index]",
                 :placeholder="placeholderPos(index)",
                 @paste="paste($event)",
@@ -11,7 +11,7 @@
                 @focus="ipFocus(index)",
                 @blur="blur",
                 ref="ipSegment")
-        input(type="number", 
+        input(type="number", maxlength="5", step="1", min="0", max="65535",
             v-show="portCopy !== false",
             v-model="portCopy",
             :placeholder="((placeholder) ? '8080' : '')",
@@ -26,7 +26,7 @@
             slot
         .form-group
             span.segment.input-group-addon(v-for="(segment, index) in ipCopy")
-                input(type="number", maxlength="3",
+                input(type="number", maxlength="3", step="1", min="0", max="255"
                     v-model="ipCopy[index]",
                     :placeholder="placeholderPos(index)",
                     @paste="paste($event)",
@@ -35,7 +35,7 @@
                     @blur="blur",
                     ref="ipSegment"
                 ).form-control
-            input(type="number", 
+            input(type="number",  maxlength="5", step="1", min="0", max="65535",
                 v-if="portCopy !== false",
                 v-model="portCopy",
                 :placeholder="((placeholder) ? '8080' : '')",
