@@ -377,15 +377,11 @@
                         this.$refs.ipSegment[index - 1].focus();
 
                 }
-
-                // else if (keyCode === 110 || keyCode === 190) {
-                //     console.log('dot');
-                //     // Allow tabing to next segment using Tab, Period or Enter if current segment has entry
-                //     if (this.ipCopy[index].length >= 1) {
-                //         this.moveToNextIpSegment(index, false);
-                //         this.ipCopy[index + 1] = this.ipCopy[index + 1].substring(0, this.ipCopy[index + 1].length - 1);
-                //     }
-                // }
+                // Allow tabing to next segment using Period or Decimal point if current segment has entry
+                else if (keyCode === 110 || keyCode === 190) {
+                    if (this.ipCopy[index].length >= 1)
+                        this.moveToNextIpSegment(index, true);
+                }
 
                 // Semi-colon (jump to port number)
                 else if (keyCode === 186)
@@ -400,8 +396,6 @@
                     } else {
                         this.moveToNextIpSegment(index, false);
                     }
-                        
-
                     // Update the change
                     this.changed();
 
@@ -416,7 +410,6 @@
                  * If there is 3 characters or 0 value check if there is another segment, if there is focus on it.
                  */
                 if (next) {
-
                     if (this.ipCopy[index + 1] !== undefined)
                         this.$refs.ipSegment[index + 1].focus();
                     else if (this.ipCopy[index + 1] === undefined)
