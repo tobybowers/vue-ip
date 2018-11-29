@@ -34,7 +34,7 @@
                     @focus="ipFocus(index)",
                     @blur="blur",
                     ref="ipSegment"
-                ).form-control
+                )
             input(type="number",  maxlength="5", step="1", min="0", max="65535",
                 v-if="portCopy !== false",
                 v-model="portCopy",
@@ -394,42 +394,41 @@
 
                 this.timeout = setTimeout(() => {
                     //console.log('Timeout');
-                    // If its a 0 then always move to the next segment, if not work out if we need to move first
-                    if (this.ipCopy[index] === '0') {
-                        this.moveToNextIpSegment(index, false);
+                    // If its a 0 then always move to the next segment
+                    if (this.ipCopy[index] === '0' || this.ipCopy[index].length === 3) {
+                        this.moveToNextIpSegment(index, true);
                     } else {
-                        this.moveToNextIpSegment(index);
+                        this.moveToNextIpSegment(index, false);
                     }
                         
 
                     // Update the change
                     this.changed();
 
-                }, 200);
+                });
             },
 
             /**
              * Work out if we need to move to the next IP segment or not
              */
-            moveToNextIpSegment(index, ifOverThree = true) {
-
+            moveToNextIpSegment(index, next = true) {
                 /**
-                 * If there is 3 characters check if there is another segment, if there is focus on it.
+                 * If there is 3 characters or 0 value check if there is another segment, if there is focus on it.
                  */
-                if (ifOverThree) {
-
-                    if (this.ipCopy[index].length >= 3 && this.ipCopy[index + 1] !== undefined)
-                        this.$refs.ipSegment[index + 1].focus();
-                    else if (this.ipCopy[index].length >= 3 && this.ipCopy[index + 1] === undefined)
-                        this.$refs.portSegment.focus();
-
-                } else if (!ifOverThree) {
+                if (next) {
 
                     if (this.ipCopy[index + 1] !== undefined)
                         this.$refs.ipSegment[index + 1].focus();
                     else if (this.ipCopy[index + 1] === undefined)
-                        this.$refs.portSegment.focus();
-
+                        if((index + 1) < 4) 
+                            this.$refs.portSegment.focus();
+                        else if((index + 1) === 4 && this.portCopy)
+                            this.$refs.portSegment.focus();
+                } else {
+                    if (this.ipCopy[index].length >= 3 && this.ipCopy[index + 1] !== undefined)
+                        this.$refs.ipSegment[index + 1].focus();
+                    else if (this.ipCopy[index].length >= 3 && this.ipCopy[index + 1] === undefined && this.portCopy)
+                        this.$refs.portSegment.focus(); 
                 }
 
             },
