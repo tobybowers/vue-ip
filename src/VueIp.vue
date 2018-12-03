@@ -3,22 +3,24 @@
         .label
             slot
         .segment(v-for="(segment, index) in ipCopy")
-            input(type="number", maxlength="3", step="1", min="0", max="255",
-                v-model="ipCopy[index]",
-                :placeholder="placeholderPos(index)",
-                @paste="paste($event)",
-                @keydown="ipKeydown($event, index)",
-                @focus="ipFocus(index)",
-                @blur="blur",
+            input(type="number" maxlength="3" step="1" min="0" max="255"
+                pattern="^[0-9].{0,3}"
+                v-model="ipCopy[index]"
+                :placeholder="placeholderPos(index)"
+                @paste="paste($event)"
+                @keydown="ipKeydown($event, index)"
+                @focus="ipFocus(index)"
+                @blur="blur"
                 ref="ipSegment")
-        input(type="number", maxlength="5", step="1", min="0", max="65535",
-            v-show="portCopy !== false",
-            v-model="portCopy",
-            :placeholder="((placeholder) ? '8080' : '')",
-            @paste="paste($event)",
-            @focus="portFocus",
-            @keydown="portKeydown",
-            @blur="blur", 
+        input(type="number" maxlength="5" step="1" min="0" max="65535"
+            pattern="^[0-9].{0,5}"
+            v-show="portCopy !== false"
+            v-model="portCopy"
+            :placeholder="((placeholder) ? '8080' : '')"
+            @paste="paste($event)"
+            @focus="portFocus"
+            @keydown="portKeydown"
+            @blur="blur"
             ref="portSegment").port
 
     form(v-else).form-inline.vue-ip
@@ -26,24 +28,26 @@
             slot
         .form-group
             span.segment.input-group-addon(v-for="(segment, index) in ipCopy")
-                input(type="number", maxlength="3", step="1", min="0", max="255"
-                    v-model="ipCopy[index]",
-                    :placeholder="placeholderPos(index)",
-                    @paste="paste($event)",
-                    @keydown="ipKeydown($event, index)",
-                    @focus="ipFocus(index)",
-                    @blur="blur",
+                input(type="number" maxlength="3" step="1" min="0" max="255"
+                    pattern="^[0-9].{0,3}"
+                    v-model="ipCopy[index]"
+                    :placeholder="placeholderPos(index)"
+                    @paste="paste($event)"
+                    @keydown="ipKeydown($event, index)"
+                    @focus="ipFocus(index)"
+                    @blur="blur"
                     ref="ipSegment"
                 )
-            input(type="number",  maxlength="5", step="1", min="0", max="65535",
-                v-if="portCopy !== false",
-                v-model="portCopy",
-                :placeholder="((placeholder) ? '8080' : '')",
-                @paste="paste($event)",
-                @focus="portFocus",
-                @keydown="portKeydown",
-                @blur="blur", 
-                ref="portSegment").form-control
+            input(type="number"  maxlength="5" step="1" min="0" max="65535"
+                pattern="^[0-9].{0,5}"
+                v-if="portCopy !== false"
+                v-model="portCopy"
+                :placeholder="((placeholder) ? '8080' : '')"
+                @paste="paste($event)"
+                @focus="portFocus"
+                @keydown="portKeydown"
+                @blur="blur"
+                ref="portSegment")
 </template>
 
 <style lang="stylus" scoped>
@@ -181,6 +185,10 @@
             target: {
                 type: [String, Boolean],
                 default: false
+            },
+            clearOnFocus: {
+                type: [Boolean],
+                default: false
             }
         },
         data() {
@@ -246,11 +254,13 @@
 
                 this.active = true;
 
-                // Clear it
-                this.ipCopy[index] = '';
+                if(this.clearOnFocus) {
+                    // Clear it
+                    this.ipCopy[index] = '';
 
-                // Update the change
-                this.changed();
+                    // Update the change
+                    this.changed();
+                }
 
             },
 
@@ -279,12 +289,13 @@
 
                 this.active = true;
 
-                // Clear it
-                this.portCopy = null;
+                if(this.clearOnFocus) {
+                    // Clear it
+                    this.portCopy = null;
 
-                // Update the change
-                this.changed();
-
+                    // Update the change
+                    this.changed();
+                }
             },
 
             /**
@@ -365,7 +376,7 @@
              */
             ipKeydown(event, index) {
 
-                clearTimeout(this.timeout);
+                //clearTimeout(this.timeout);
 
                 let keyCode = event.keyCode || event.which;
 
@@ -379,8 +390,11 @@
                 }
                 // Allow tabing to next segment using Period or Decimal point if current segment has entry
                 else if (keyCode === 110 || keyCode === 190) {
-                    if (this.ipCopy[index].length >= 1)
+                    event.preventDefault();
+                    if (this.ipCopy[index].length > 0) {
                         this.moveToNextIpSegment(index, true);
+                    } 
+                        
                 }
 
                 // Semi-colon (jump to port number)
@@ -388,8 +402,7 @@
                     this.$refs.portSegment.focus();
 
 
-                this.timeout = setTimeout(() => {
-                    //console.log('Timeout');
+                setTimeout(() => {
                     // If its a 0 then always move to the next segment
                     if (this.ipCopy[index] === '0' || this.ipCopy[index].length === 3) {
                         this.moveToNextIpSegment(index, true);
@@ -414,7 +427,7 @@
                         this.$refs.ipSegment[index + 1].focus();
                     else if (this.ipCopy[index + 1] === undefined)
                         if((index + 1) < 4) 
-                            this.$refs.portSegment.focus();
+                            this.$refs.ipSegment[index + 1].focus();
                         else if((index + 1) === 4 && this.portCopy)
                             this.$refs.portSegment.focus();
                 } else {
@@ -431,7 +444,7 @@
              */
             changed(ip = this.ipCopy, port = this.portCopy) {
                 let ipLocal = this.arrayToIp(ip);
-                this.ip = ipLocal;
+                //this.ip = ipLocal;
                 this.onChange(ipLocal, port, this.validateIP(ip), this.target);
             },
 
